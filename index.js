@@ -50,6 +50,7 @@ bot.on('callback_query', ctx => {
 
   if (!callback_query) {
     ctx.reply('Sorry!');
+    return;
   }
   const data = callback_query.data;
 
