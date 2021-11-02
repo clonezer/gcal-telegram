@@ -34,14 +34,19 @@ bot.on('callback_query', ctx => {
     ctx.reply('Wait a sec');
     Calendar.createAppointment(title, startedAt, endedAt)
       .then(() => {
-        ctx.reply(
-          `✅ ${title} - ${startedAt.format('ddd, D MMM - hh:mm a')} saved`,
-        );
+        const datetimeString = startedAt
+          .tz('Asia/Singapore')
+          .format('ddd, D MMM - hh:mm a');
+        ctx.reply(`✅ ${title} - ${datetimeString} saved`);
         bot.context.db.newAppointment[`${userId}`] = undefined;
       })
       .catch(error => {
         ctx.reply(error.message);
+        bot.context.db.newAppointment[`${userId}`] = undefined;
       });
+  } else if (data == 'cancel') {
+    ctx.reply(`Please try agian!`);
+    bot.context.db.newAppointment[`${userId}`] = undefined;
   }
 });
 
@@ -110,13 +115,14 @@ bot.on('message', ctx => {
   }
 
   bot.context.db.newAppointment[`${userId}`] = newAppointment;
-
+  const datetimeString = newAppointment.startedAt
+    .tz('Asia/Singapore')
+    .format('ddd, D MMM - hh:mm a');
   ctx.reply(
-    `📒 ${newAppointment.title} - ${newAppointment.startedAt.format(
-      'ddd, D MMM - hh:mm a',
-    )}?`,
+    `📒 ${newAppointment.title} - ${datetimeString}?`,
     Markup.inlineKeyboard([
-      Markup.button.callback('Confirm', 'create_appointment'),
+      Markup.button.callback('Yes', 'create_appointment'),
+      Markup.button.callback('No', 'cancel'),
     ]),
   );
 });
