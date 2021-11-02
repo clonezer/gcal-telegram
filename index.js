@@ -73,7 +73,6 @@ bot.command('today', ctx => {
 
 const textToAppointments = incoming => {
   const parsed = chrono.parse(incoming, { timezone: 'SGT' });
-
   if (!parsed || parsed.length == 0) {
     return null;
   }
@@ -107,6 +106,7 @@ bot.on('message', ctx => {
 
   if (!newAppointment) {
     ctx.reply('Please try again!');
+    return;
   }
 
   bot.context.db.newAppointment[`${userId}`] = newAppointment;
