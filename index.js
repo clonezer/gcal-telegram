@@ -55,6 +55,10 @@ bot.on('callback_query', ctx => {
   const data = callback_query.data;
 
   if (data == 'create_appointment') {
+    if (!bot.context.db.newAppointment[userId]) {
+      ctx.reply('Sorry! This action already done');
+      return;
+    }
     const { title, startedAt, endedAt } = bot.context.db.newAppointment[userId];
     ctx.reply('Wait a sec');
     Calendar.createAppointment(title, startedAt, endedAt)
