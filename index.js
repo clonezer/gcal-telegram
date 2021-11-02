@@ -1,5 +1,7 @@
 require('dotenv').config();
 
+const cron = require('node-cron');
+
 const dayjs = require('dayjs');
 const utc = require('dayjs/plugin/utc');
 const timezone = require('dayjs/plugin/timezone');
@@ -17,6 +19,28 @@ const bot = new Telegraf(process.env.TELEGRAM_TOKEN);
 bot.context.db = {
   newAppointment: {},
 };
+
+cron.schedule(
+  '30 22 * * *',
+  async () => {
+    console.log('running a task every minute');
+    const chatIds = Object.keys(bot.context.db.newAppointment);
+    const startedAt = dayjs().tz('Asia/Singapore').add(1, 'day').startOf('day');
+    const endedAt = startedAt.endOf('day');
+    try {
+      const message = await Calendar.getAppointments(startedAt, endedAt);
+      chatIds.forEach(chatId => {
+        bot.telegram.sendMessage(chatId, message);
+      });
+    } catch (error) {
+      console.log('No Appointments');
+    }
+  },
+  {
+    scheduled: true,
+    timezone: 'Asia/Singapore',
+  },
+);
 
 bot.start(ctx => ctx.reply('Hello!'));
 
@@ -38,15 +62,15 @@ bot.on('callback_query', ctx => {
           .tz('Asia/Singapore')
           .format('ddd, D MMM - hh:mm a');
         ctx.reply(`✅ ${title} - ${datetimeString} saved`);
-        bot.context.db.newAppointment[`${userId}`] = undefined;
+        bot.context.db.newAppointment[`${userId}`] = null;
       })
       .catch(error => {
         ctx.reply(error.message);
-        bot.context.db.newAppointment[`${userId}`] = undefined;
+        bot.context.db.newAppointment[`${userId}`] = null;
       });
   } else if (data == 'cancel') {
     ctx.reply(`Please try agian!`);
-    bot.context.db.newAppointment[`${userId}`] = undefined;
+    bot.context.db.newAppointment[`${userId}`] = null;
   }
 });
 
@@ -105,6 +129,7 @@ const textToAppointments = incoming => {
 };
 
 bot.on('message', ctx => {
+  console.log(ctx.message);
   const { id: userId } = ctx.message.from;
   const incoming = ctx.message.text.trim();
   const newAppointment = textToAppointments(incoming);
