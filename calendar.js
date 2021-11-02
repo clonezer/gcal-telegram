@@ -1,4 +1,13 @@
 require('dotenv').config();
+
+const dayjs = require('dayjs');
+const utc = require('dayjs/plugin/utc');
+const timezone = require('dayjs/plugin/timezone');
+const customParseFormat = require('dayjs/plugin/customParseFormat');
+dayjs.extend(customParseFormat);
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 const { google } = require('googleapis');
 const serviceAccount = require('./calendar-service.json');
 
@@ -24,7 +33,9 @@ const getAppointments = (startedAt, endedAt) => {
         if (err || calendarResponse.data.items.length == 0) {
           reject(err || new Error('No appointment'));
         }
-        const response = '*🗓 Event list*\n\n';
+        const response = `*🗓 Event list on ${startedAt
+          .tz('Asia/Singapore')
+          .format('ddd D MMM')}*\n\n`;
         const eventListStrings = calendarResponse.data.items
           .map(event => {
             const start = event.start.dateTime || event.start.date;
