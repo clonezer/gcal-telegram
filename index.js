@@ -12,12 +12,13 @@ dayjs.extend(timezone);
 
 const Calendar = require('./calendar');
 const chrono = require('chrono-node');
+const newAppointment = require('./users.json');
 
 const { Telegraf, Markup } = require('telegraf');
 const bot = new Telegraf(process.env.TELEGRAM_TOKEN);
 
 bot.context.db = {
-  newAppointment: {},
+  newAppointment,
 };
 
 cron.schedule(
