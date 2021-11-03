@@ -105,6 +105,19 @@ bot.command('today', ctx => {
     });
 });
 
+bot.command('weekend', ctx => {
+  ctx.reply('Wait a sec');
+  const startedAt = dayjs().tz('Asia/Singapore').endOf('week').startOf('day');
+  const endedAt = startedAt.add(1, 'day').endOf('day');
+  Calendar.getAppointments(startedAt, endedAt)
+    .then(message => {
+      ctx.replyWithMarkdown(message);
+    })
+    .catch(error => {
+      ctx.reply(error.message);
+    });
+});
+
 const textToAppointments = incoming => {
   const parsed = chrono.parse(incoming, { timezone: 'SGT' });
   if (!parsed || parsed.length == 0) {
