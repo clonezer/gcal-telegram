@@ -33,9 +33,21 @@ const getAppointments = (startedAt, endedAt) => {
         if (err || calendarResponse.data.items.length == 0) {
           reject(err || new Error('No appointment'));
         }
-        const response = `*🗓 Event list on ${startedAt
-          .tz('Asia/Singapore')
-          .format('ddd D MMM')}*\n\n`;
+
+        let dateString = '';
+        if (startedAt.isSame(endedAt, 'day')) {
+          dateString = startedAt.tz('Asia/Singapore').format('ddd D MMM');
+        } else {
+          const startedAtString = startedAt
+            .tz('Asia/Singapore')
+            .format('ddd D MMM');
+          const endedAtString = endedAt
+            .tz('Asia/Singapore')
+            .format('ddd D MMM');
+          dateString = `${startedAtString} - ${endedAtString}`;
+        }
+
+        const response = `*🗓 Event list on ${dateString}*\n\n`;
         const eventListStrings = calendarResponse.data.items
           .map(event => {
             const start = event.start.dateTime || event.start.date;
