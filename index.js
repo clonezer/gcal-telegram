@@ -57,7 +57,7 @@ bot.on('callback_query', ctx => {
 
   if (data == 'create_appointment') {
     if (!bot.context.db.newAppointment[userId]) {
-      ctx.reply('Sorry! This action already done');
+      ctx.reply('Sorry! This action is already taken');
       return;
     }
     const { title, startedAt, endedAt } = bot.context.db.newAppointment[userId];
