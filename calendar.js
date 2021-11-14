@@ -63,6 +63,41 @@ const getAppointments = (startedAt, endedAt) => {
   });
 };
 
+const checkOverlapAppointments = (startedAt, endedAt) => {
+  const targetStart = startedAt.subtract(30, 'minute');
+  const targetEnd = endedAt.add(30, 'minute');
+  return new Promise((resolve, reject) => {
+    calendar.events.list(
+      {
+        auth: serviceAccountAuth,
+        calendarId: calendarId,
+        timeMin: targetStart.toISOString(),
+        timeMax: targetEnd.toISOString(),
+      },
+      (err, calendarResponse) => {
+        if (err) {
+          reject(err);
+        }
+
+        if (calendarResponse.data.items.length == 0) {
+          resolve(null);
+        } else {
+          const eventListStrings = calendarResponse.data.items
+            .map(event => {
+              const start = event.start.dateTime || event.start.date;
+              const startString = dayjs(start)
+                .tz('Asia/Singapore')
+                .format('hh:mm a');
+              return `- ${event.summary} - ${startString}`;
+            })
+            .join('\n');
+          resolve(eventListStrings);
+        }
+      },
+    );
+  });
+};
+
 const createAppointment = (title, startedAt, endedAt) => {
   return new Promise((resolve, reject) => {
     const options = {
@@ -105,4 +140,5 @@ const createAppointment = (title, startedAt, endedAt) => {
 module.exports = {
   getAppointments,
   createAppointment,
+  checkOverlapAppointments,
 };

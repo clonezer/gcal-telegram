@@ -24,7 +24,6 @@ bot.context.db = {
 cron.schedule(
   '30 22 * * *',
   async () => {
-    console.log('running a task every minute');
     const chatIds = Object.keys(bot.context.db.newAppointment);
     const startedAt = dayjs().tz('Asia/Singapore').add(1, 'day').startOf('day');
     const endedAt = startedAt.endOf('day');
@@ -147,8 +146,7 @@ const textToAppointments = incoming => {
   };
 };
 
-bot.on('message', ctx => {
-  console.log(ctx.message);
+bot.on('message', async ctx => {
   const { id: userId } = ctx.message.from;
   const incoming = ctx.message.text.trim();
   const newAppointment = textToAppointments(incoming);
@@ -159,16 +157,33 @@ bot.on('message', ctx => {
   }
 
   bot.context.db.newAppointment[`${userId}`] = newAppointment;
-  const datetimeString = newAppointment.startedAt
-    .tz('Asia/Singapore')
-    .format('ddd, D MMM - hh:mm a');
-  ctx.reply(
-    `📒 ${newAppointment.title} - ${datetimeString}?`,
-    Markup.inlineKeyboard([
-      Markup.button.callback('Yes', 'create_appointment'),
-      Markup.button.callback('No', 'cancel'),
-    ]),
-  );
+
+  try {
+    const overlapingAppointments = await Calendar.checkOverlapAppointments(
+      newAppointment.startedAt,
+      newAppointment.endedAt,
+    );
+
+    const datetimeString = newAppointment.startedAt
+      .tz('Asia/Singapore')
+      .format('ddd, D MMM - hh:mm a');
+
+    let message = `📒 ${newAppointment.title} - ${datetimeString}?`;
+
+    if (overlapingAppointments) {
+      message = `${message}\n\n⚠️ *Warning*\n${overlapingAppointments}`;
+    }
+
+    ctx.replyWithMarkdown(
+      message,
+      Markup.inlineKeyboard([
+        Markup.button.callback('Yes', 'create_appointment'),
+        Markup.button.callback('No', 'cancel'),
+      ]),
+    );
+  } catch (error) {
+    ctx.reply(error.message);
+  }
 });
 
 bot.launch();
