@@ -85,10 +85,15 @@ const checkOverlapAppointments = (startedAt, endedAt) => {
           const eventListStrings = calendarResponse.data.items
             .map(event => {
               const start = event.start.dateTime || event.start.date;
+              const end = event.end.dateTime || event.end.date;
               const startString = dayjs(start)
                 .tz('Asia/Singapore')
                 .format('hh:mm a');
-              return `- ${event.summary} - ${startString}`;
+
+              const endString = dayjs(end)
+                .tz('Asia/Singapore')
+                .format('hh:mm a');
+              return `- *${event.summary}*: ${startString} to ${endString}`;
             })
             .join('\n');
           resolve(eventListStrings);
